@@ -1,0 +1,31 @@
+1. How would you modify the system to handle a potential loss of temperature feedback?
+    a.) I would add a redundant temperature sensor in order to still have temperature feedback in the event the primary sensor is out of operation.
+    b.) If a redundant sensor is not an option, or the backup sensor fails as well, I would perform an error check that would turn the cooler 
+        on as a fail safe if a temperature reading error was detected. This assumes that a more catostrophic failure would occur if the 
+        the temperature were to get too high rather than too low.
+
+2. Suggest two additional possible Cooler Control Modes and describe them.
+    a.) PID Control Mode
+        In this control mode, a value for desired temperature is set, and the error (desired temperature - actual temperature) is calculated. 
+        Modifications to the hardware/software are necessary, for example, the amount of power to the cooler must be able to be controlled, or the 
+        "ON/OFF" control must be controled by a PWM signal with a varying duty cycle. Three values, proportional gain, integral gain, and derivative 
+        gain will control the behvaior of the systsem.
+
+        - The Proportional gain (Kp) will respond proportionally to the value of the error. (Kp *Error)
+        - The Derivative gain (Kd) will try to predict whether the value will overshoot the target based on the derivative, or rate of 
+        change, of the value. (Kd * (dError/dt))
+        - The Integral gain will help reduce any steady state error that may occur by taking into account the past error. (Ki * integral(error) )
+        
+        Not all three terms need to be used and the values for each of the gains will have to be tuned to get desired system behavior. 
+
+    b.) Timer Control Mode
+        In this control mode, the cooler will be on for a preset amount of time and then turned off for a preset amount of time.
+        The amount of time the cooler is on would allow for the environment to cool down to 10 degrees and the time off would allow the 
+        environment to heat back up to 20 degrees. This mode does not take temperature feedback into account and it will likely not perform well in 
+        regulating the temperature autonomously if environmental conditons change. 
+
+3. Recommend other hardware or software improvements to enhance the system's performance or reliability.
+    a.) A hardware improvement would be to implement a second temperature sensor to prevent the loss of temperature feedback
+    b.) A software improvement would be implementing a digital filter for the temperature sensor input if values are still noisy
+    c.) An additional software improvement would be implementing Real Time Operating System (RTOS). If telemetry data is time sensitive, this can 
+    ensure that it is sent in the appropriate frequency. This would also be useful if additional funcitonality was added to the TCM in the future.

@@ -14,11 +14,11 @@ int temp;
 void setup() {
   // put your setup code here, to run once:
   pinMode(coolerPin,OUTPUT); //set cooler outpin pin
-  Serial1.begin(115200); //begin serial communication on rx1 and tx1 (UART 1)
+  Serial1.begin(115200); //begin serial communication on rx1 and tx1 (UART 1) - default configuration
 }
 
 void loop() {
-  if(Serial1.available() == 2){
+  if(Serial1.available() >= 2){
     byte byte0 = Serial1.read();//Read in first byte
     byte byte1 = Serial1.read();//Read in second byte 
 
@@ -36,11 +36,11 @@ void loop() {
     }
     else{
       digitalWrite(coolerPin,LOW);
-      status = 0;
+      status = 0;//Update Status
     }
 
     sendTelemetry();
-    delay(1000); //Delay to send telemtry data as often as expected
+    delay(1000); //Delay to update input and send telemtry data as often as desired
        
 
   }
@@ -48,7 +48,8 @@ void loop() {
 }
 
 int getTemp(){
-    //get Average temp reading over 15 iterations to help reduce noisy output
+    //Get Average temp reading over 15 iterations to help reduce noisy output
+    //If this does not give accurate enough readings, consider using a filter
     int i = 0;
     int iterations = 15;
     int sum = 0;
@@ -64,21 +65,21 @@ int getTemp(){
 }
 
 void controlModes(byte mode){
-  switch(mode){
+  switch(mode){ 
   case manualMode:
-    digitalWrite(coolerPin,HIGH);
-    status = 1;
+    digitalWrite(coolerPin,HIGH); //ManualMode and Cooler Enable
+    status = 1; //Update Status
   break;
 
   case bangBangMode:
     int currentTemp = getTemp();
-    if(currentTemp<10){
-      digitalWrite(coolerPin,LOW);
-      status = 0;
+    if(currentTemp<12){ //12 as low end threshold to allow for 2 degree overshoot
+      digitalWrite(coolerPin,LOW); //Turn cooler off if below threshold
+      status = 0;//Update Status
     }
-    else if(currentTemp>20){
-      digitalWrite(coolerPin,HIGH);
-      status =1;
+    else if(currentTemp>18){//12 as low end threshold to allow for 2 degree overshoot
+      digitalWrite(coolerPin,HIGH); //Turn cooler on if above threshold 
+      status =1;//Update Status
     }
   break;
   //add additional cases for different modes
@@ -86,15 +87,15 @@ void controlModes(byte mode){
 }
 
 void sendTelemetry(){
-  byte byte0 = 0x10; 
-  byte byte1 = 0x00; 
+  byte byte0 = 0x10; //Status Message
+  byte byte1 = 0x00; //Assume cooler is off
   if(status ==1){
-    byte byte1 = 0x01;
+    byte byte1 = 0x01; //Change byte1 if cooler is on
   }
   Serial1.write(byte0);
   Serial1.write(byte1);
 
-  byte0 = 0x11;
+  byte0 = 0x11; //Temperature Message
   unsigned int temp = getTemp();
   byte1 = temp;
   Serial1.write(byte0);
